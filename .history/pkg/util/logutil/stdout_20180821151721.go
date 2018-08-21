@@ -20,25 +20,22 @@ func (hook TerminalHook) Fire(entry *logrus.Entry) error {
 	err, hasErr := entry.Data[logrus.ErrorKey]
 	message := "[" + strings.ToUpper(entry.Level.String()) + "] " + entry.Message + "\n"
 
-	if entry.Level == logrus.DebugLevel {
-		ct.Foreground(ct.Yellow, false)
-	} else if entry.Level == logrus.InfoLevel {
-		ct.Foreground(ct.Green, false)
-	} else {
-		ct.Foreground(ct.Red, false)
-	}
-
 	if hasErr {
+		ct.Foreground(ct.Green, false)
+		ct.ChangeColor(ct.Red, true, ct.White, false)
 		errCasted := err.(error)
 		message = message + errCasted.Error() + "\n"
+		ct.ResetColor()
 	}
 	output := []byte(message)
 
 	if entry.Level == logrus.InfoLevel {
+		// ct.Foreground(ct.Green, false)
+		// ct.ChangeColor(ct.Red, true, ct.White, false)
 		os.Stdout.Write(output)
+		// ct.ResetColor()
 	} else {
 		os.Stderr.Write(output)
 	}
-	ct.ResetColor()
 	return nil
 }
