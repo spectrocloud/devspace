@@ -1,6 +1,8 @@
 ---
-title: "Command - devspace add image"
+title: Command - devspace add image
 sidebar_label: image
+id: version-v4.2.0-devspace_add_image
+original_id: devspace_add_image
 ---
 
 

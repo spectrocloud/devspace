@@ -1,6 +1,8 @@
 ---
-title: "Command - devspace add sync"
+title: Command - devspace add sync
 sidebar_label: sync
+id: version-v4.2.0-devspace_add_sync
+original_id: devspace_add_sync
 ---
 
 

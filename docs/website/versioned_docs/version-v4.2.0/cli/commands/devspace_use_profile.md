@@ -1,36 +1,37 @@
 ---
-title: "Command - devspace add sync"
-sidebar_label: sync
+title: Command - devspace use profile
+sidebar_label: profile
+id: version-v4.2.0-devspace_use_profile
+original_id: devspace_use_profile
 ---
 
 
-Add a sync path
+Use a specific DevSpace profile
 
 ## Synopsis
 
 
 ```
-devspace add sync [flags]
+devspace use profile [flags]
 ```
 
 ```
 #######################################################
-################# devspace add sync ###################
+################ devspace use profile #################
 #######################################################
-Add a sync path to this project's devspace.yaml
+Use a specific DevSpace profile
 
 Example:
-devspace add sync --local=app --container=/app
+devspace use profile production
+devspace use profile staging
+devspace use profile --reset
 #######################################################
 ```
 ## Options
 
 ```
-      --container string        Absolute container path
-      --exclude string          Comma separated list of paths to exclude (e.g. node_modules/,bin,*.exe)
-  -h, --help                    help for sync
-      --label-selector string   Comma separated key=value selector list (e.g. release=test)
-      --local string            Relative local path
+  -h, --help    help for profile
+      --reset   Don't use a profile anymore
 ```
 
 ### Options inherited from parent commands
@@ -48,4 +49,4 @@ devspace add sync --local=app --container=/app
 
 ## See Also
 
-* [devspace add](../../cli/commands/devspace_add)	 - Convenience command: adds something to devspace.yaml
+* [devspace use](../../cli/commands/devspace_use)	 - Use specific config

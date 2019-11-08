@@ -1,36 +1,35 @@
 ---
-title: "Command - devspace add sync"
-sidebar_label: sync
+title: Command - devspace add provider
+sidebar_label: provider
+id: version-v4.2.0-devspace_add_provider
+original_id: devspace_add_provider
 ---
 
 
-Add a sync path
+Adds a new cloud provider to the configuration
 
 ## Synopsis
 
 
 ```
-devspace add sync [flags]
+devspace add provider [flags]
 ```
 
 ```
 #######################################################
-################# devspace add sync ###################
+############## devspace add provider ##################
 #######################################################
-Add a sync path to this project's devspace.yaml
+Add a new cloud provider.
 
 Example:
-devspace add sync --local=app --container=/app
+devspace add provider app.devspace.cloud
 #######################################################
 ```
 ## Options
 
 ```
-      --container string        Absolute container path
-      --exclude string          Comma separated list of paths to exclude (e.g. node_modules/,bin,*.exe)
-  -h, --help                    help for sync
-      --label-selector string   Comma separated key=value selector list (e.g. release=test)
-      --local string            Relative local path
+  -h, --help          help for provider
+      --host string   The URL DevSpace should use for this provider
 ```
 
 ### Options inherited from parent commands

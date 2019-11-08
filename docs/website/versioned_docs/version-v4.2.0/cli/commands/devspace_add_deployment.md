@@ -1,6 +1,8 @@
 ---
-title: "Command - devspace add deployment"
+title: Command - devspace add deployment
 sidebar_label: deployment
+id: version-v4.2.0-devspace_add_deployment
+original_id: devspace_add_deployment
 ---
 
 

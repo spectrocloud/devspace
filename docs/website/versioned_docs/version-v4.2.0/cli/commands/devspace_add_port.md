@@ -1,36 +1,35 @@
 ---
-title: "Command - devspace add sync"
-sidebar_label: sync
+title: Command - devspace add port
+sidebar_label: port
+id: version-v4.2.0-devspace_add_port
+original_id: devspace_add_port
 ---
 
 
-Add a sync path
+Add a new port forward configuration
 
 ## Synopsis
 
 
 ```
-devspace add sync [flags]
+devspace add port [flags]
 ```
 
 ```
 #######################################################
-################# devspace add sync ###################
+################ devspace add port ####################
 #######################################################
-Add a sync path to this project's devspace.yaml
+Add a new port mapping to this project's devspace.yaml
 
-Example:
-devspace add sync --local=app --container=/app
+Format is port(:remotePort) comma separated, e.g.
+devspace add port 8080:80,3000
 #######################################################
 ```
 ## Options
 
 ```
-      --container string        Absolute container path
-      --exclude string          Comma separated list of paths to exclude (e.g. node_modules/,bin,*.exe)
-  -h, --help                    help for sync
-      --label-selector string   Comma separated key=value selector list (e.g. release=test)
-      --local string            Relative local path
+  -h, --help                    help for port
+      --label-selector string   Comma separated key=value label-selector list (e.g. release=test)
 ```
 
 ### Options inherited from parent commands

@@ -1,6 +1,8 @@
 ---
-title: "Command - devspace deploy"
+title: Command - devspace deploy
 sidebar_label: devspace deploy
+id: version-v4.2.0-devspace_deploy
+original_id: devspace_deploy
 ---
 
 

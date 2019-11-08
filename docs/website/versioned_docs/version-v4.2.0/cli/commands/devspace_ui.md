@@ -1,36 +1,34 @@
 ---
-title: "Command - devspace add sync"
-sidebar_label: sync
+title: Command - devspace ui
+sidebar_label: devspace ui
+id: version-v4.2.0-devspace_ui
+original_id: devspace_ui
 ---
 
 
-Add a sync path
+Opens the localhost UI in the browser
 
 ## Synopsis
 
 
 ```
-devspace add sync [flags]
+devspace ui [flags]
 ```
 
 ```
 #######################################################
-################# devspace add sync ###################
+##################### devspace ui #####################
 #######################################################
-Add a sync path to this project's devspace.yaml
-
-Example:
-devspace add sync --local=app --container=/app
+Opens the localhost UI in the browser
 #######################################################
 ```
 ## Options
 
 ```
-      --container string        Absolute container path
-      --exclude string          Comma separated list of paths to exclude (e.g. node_modules/,bin,*.exe)
-  -h, --help                    help for sync
-      --label-selector string   Comma separated key=value selector list (e.g. release=test)
-      --local string            Relative local path
+      --dev        Ignore errors when downloading UI
+  -h, --help       help for ui
+      --port int   The port to use when opening the server
+      --server     If enabled will force start a server (otherwise an existing UI server is searched)
 ```
 
 ### Options inherited from parent commands
@@ -45,7 +43,3 @@ devspace add sync --local=app --container=/app
   -s, --switch-context        Switches and uses the last kube context and namespace that was used to deploy the DevSpace project
       --var strings           Variables to override during execution (e.g. --var=MYVAR=MYVALUE)
 ```
-
-## See Also
-
-* [devspace add](../../cli/commands/devspace_add)	 - Convenience command: adds something to devspace.yaml

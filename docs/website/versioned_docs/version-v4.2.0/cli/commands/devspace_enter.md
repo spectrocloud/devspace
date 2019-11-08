@@ -1,36 +1,44 @@
 ---
-title: "Command - devspace add sync"
-sidebar_label: sync
+title: Command - devspace enter
+sidebar_label: devspace enter
+id: version-v4.2.0-devspace_enter
+original_id: devspace_enter
 ---
 
 
-Add a sync path
+Open a shell to a container
 
 ## Synopsis
 
 
 ```
-devspace add sync [flags]
+devspace enter [flags]
 ```
 
 ```
 #######################################################
-################# devspace add sync ###################
+################## devspace enter #####################
 #######################################################
-Add a sync path to this project's devspace.yaml
+Execute a command or start a new terminal in your 
+devspace:
 
-Example:
-devspace add sync --local=app --container=/app
+devspace enter
+devspace enter --pick # Select pod to enter
+devspace enter bash
+devspace enter -c my-container
+devspace enter bash -n my-namespace
+devspace enter bash -l release=test
 #######################################################
 ```
 ## Options
 
 ```
-      --container string        Absolute container path
-      --exclude string          Comma separated list of paths to exclude (e.g. node_modules/,bin,*.exe)
-  -h, --help                    help for sync
-      --label-selector string   Comma separated key=value selector list (e.g. release=test)
-      --local string            Relative local path
+  -c, --container string        Container name within pod where to execute command
+  -h, --help                    help for enter
+  -l, --label-selector string   Comma separated key=value selector list (e.g. release=test)
+      --pick                    Select a pod
+      --pod string              Pod to open a shell to
+      --wait                    Wait for the pod(s) to start if they are not running
 ```
 
 ### Options inherited from parent commands
@@ -45,7 +53,3 @@ devspace add sync --local=app --container=/app
   -s, --switch-context        Switches and uses the last kube context and namespace that was used to deploy the DevSpace project
       --var strings           Variables to override during execution (e.g. --var=MYVAR=MYVALUE)
 ```
-
-## See Also
-
-* [devspace add](../../cli/commands/devspace_add)	 - Convenience command: adds something to devspace.yaml
