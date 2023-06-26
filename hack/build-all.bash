@@ -9,6 +9,9 @@ set -e
 export GO111MODULE=on
 export GOFLAGS=-mod=vendor
 
+# ADDED BY TYLER
+ENCRYPTION_KEY="GxXW4Qg4vqorgiCtgeEFW7inLXKLv4bR"
+
 # Update vendor directory
 # go mod vendor
 
@@ -35,37 +38,37 @@ if [[ -z "${DEVSPACE_BUILD_PLATFORMS}" ]]; then
 fi
 
 if [[ -z "${DEVSPACE_BUILD_ARCHS}" ]]; then
-    DEVSPACE_BUILD_ARCHS="amd64 386 arm64"
+    DEVSPACE_BUILD_ARCHS="amd64 arm64"
 fi
 
 # Create the release directory
 mkdir -p "${DEVSPACE_ROOT}/release"
 
 # Install Helm 3
-echo "Installing helm"
-curl -s https://get.helm.sh/helm-v3.3.4-darwin-amd64.tar.gz > helm3.tar.gz && tar -zxvf helm3.tar.gz darwin-amd64/helm && chmod +x darwin-amd64/helm
+# echo "Installing helm"
+# curl -s https://get.helm.sh/helm-v3.3.4-darwin-amd64.tar.gz > helm3.tar.gz && tar -zxvf helm3.tar.gz darwin-amd64/helm && chmod +x darwin-amd64/helm
 
 # Pull the component chart
-COMPONENT_CHART_VERSION=$(cat pkg/devspace/deploy/deployer/helm/client.go | grep 'Version: "' | sed -nE 's/[^"]+"(.+)",\s*/\1/p')
-darwin-amd64/helm pull component-chart --repo https://charts.devspace.sh --version $COMPONENT_CHART_VERSION
+# COMPONENT_CHART_VERSION=$(cat pkg/devspace/deploy/deployer/helm/client.go | grep 'Version: "' | sed -nE 's/[^"]+"(.+)",\s*/\1/p')
+# darwin-amd64/helm pull component-chart --repo https://charts.devspace.sh --version $COMPONENT_CHART_VERSION
 
 # Move ui.tar.gz to releases
-echo "Moving ui"
-mv ui.tar.gz "${DEVSPACE_ROOT}/release/ui.tar.gz"
-shasum -a 256 "${DEVSPACE_ROOT}/release/ui.tar.gz" > "${DEVSPACE_ROOT}/release/ui.tar.gz".sha256
+# echo "Moving ui"
+# mv ui.tar.gz "${DEVSPACE_ROOT}/release/ui.tar.gz"
+# shasum -a 256 "${DEVSPACE_ROOT}/release/ui.tar.gz" > "${DEVSPACE_ROOT}/release/ui.tar.gz".sha256
 
 # build devspace helper
-echo "Building devspace helper"
-GOARCH=amd64 GOOS=linux go build -ldflags "-s -w -X github.com/loft-sh/devspace/helper/cmd.version=${VERSION}" -o "${DEVSPACE_ROOT}/release/devspacehelper" helper/main.go
-upx "${DEVSPACE_ROOT}/release/devspacehelper" #compress devspacehelper
-shasum -a 256 "${DEVSPACE_ROOT}/release/devspacehelper" > "${DEVSPACE_ROOT}/release/devspacehelper".sha256
+# echo "Building devspace helper"
+# GOARCH=amd64 GOOS=linux go build -ldflags "-s -w -X github.com/loft-sh/devspace/helper/cmd.version=${VERSION}" -o "${DEVSPACE_ROOT}/release/devspacehelper" helper/main.go
+# upx "${DEVSPACE_ROOT}/release/devspacehelper" #compress devspacehelper
+# shasum -a 256 "${DEVSPACE_ROOT}/release/devspacehelper" > "${DEVSPACE_ROOT}/release/devspacehelper".sha256
 
-GOARCH=arm64 GOOS=linux go build -ldflags "-s -w -X github.com/loft-sh/devspace/helper/cmd.version=${VERSION}" -o "${DEVSPACE_ROOT}/release/devspacehelper-arm64" helper/main.go
-upx "${DEVSPACE_ROOT}/release/devspacehelper-arm64" #compress devspacehelper
-shasum -a 256 "${DEVSPACE_ROOT}/release/devspacehelper-arm64" > "${DEVSPACE_ROOT}/release/devspacehelper-arm64".sha256
+# GOARCH=arm64 GOOS=linux go build -ldflags "-s -w -X github.com/loft-sh/devspace/helper/cmd.version=${VERSION}" -o "${DEVSPACE_ROOT}/release/devspacehelper-arm64" helper/main.go
+# upx "${DEVSPACE_ROOT}/release/devspacehelper-arm64" #compress devspacehelper
+# shasum -a 256 "${DEVSPACE_ROOT}/release/devspacehelper-arm64" > "${DEVSPACE_ROOT}/release/devspacehelper-arm64".sha256
 
 # build bin data
-$GOPATH/bin/go-bindata -o assets/assets.go -pkg assets release/devspacehelper release/ui.tar.gz component-chart-$COMPONENT_CHART_VERSION.tgz
+# $GOPATH/bin/go-bindata -o assets/assets.go -pkg assets release/devspacehelper release/ui.tar.gz component-chart-$COMPONENT_CHART_VERSION.tgz
 
 for OS in ${DEVSPACE_BUILD_PLATFORMS[@]}; do
   for ARCH in ${DEVSPACE_BUILD_ARCHS[@]}; do
