@@ -80,8 +80,8 @@ mkdir -p "${DEVSPACE_ROOT}/release"
 if [[ "${FIPS_ENABLE}" == "yes" ]]; then
   # build the DevSpace binary
   CGO_ENABLED=1 GOARCH=amd64 GOOS=linux GOEXPERIMENT=boringcrypto ${GO_BUILD_CMD} -ldflags "${GO_BUILD_LDFLAGS}"\
-                -o "${DEVSPACE_ROOT}/release/${NAME}" .
-  shasum -a 256 "${DEVSPACE_ROOT}/release/${NAME}" > "${DEVSPACE_ROOT}/release/${NAME}".sha256
+                -o "${DEVSPACE_ROOT}/release/devspace-linux-amd64-fips" .
+  shasum -a 256 "${DEVSPACE_ROOT}/release/devspace-linux-amd64-fips" > "${DEVSPACE_ROOT}/release/devspace-linux-amd64-fips".sha256
 else    
   for OS in ${DEVSPACE_BUILD_PLATFORMS[@]}; do
     for ARCH in ${DEVSPACE_BUILD_ARCHS[@]}; do
