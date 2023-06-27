@@ -31,15 +31,22 @@ if [[ "$(pwd)" != "${DEVSPACE_ROOT}" ]]; then
 fi
 
 GO_BUILD_CMD="go build -a"
-GO_BUILD_LDFLAGS="-s -w -X main.commitHash=${COMMIT_HASH} -X main.buildDate=${DATE} -X main.version=${VERSION} -X github.com/loft-sh/devspace/pkg/devspace/config/localcache.EncryptionKey=$ENCRYPTION_KEY"
 
-if [[ -z "${DEVSPACE_BUILD_PLATFORMS}" ]]; then
-    DEVSPACE_BUILD_PLATFORMS="linux windows darwin"
-fi
+if [[ "${FIPS_ENABLE}" == "yes" ]]; then
+  GO_BUILD_LDFLAGS="-s -w -linkmode=external -extldflags "-static" -X main.commitHash=${COMMIT_HASH} -X main.buildDate=${DATE} -X main.version=${VERSION} -X github.com/loft-sh/devspace/pkg/devspace/config/localcache.EncryptionKey=$ENCRYPTION_KEY"
+  DEVSPACE_BUILD_PLATFORMS="linux"
+  DEVSPACE_BUILD_ARCHS="amd64"
+else
+  GO_BUILD_LDFLAGS="-s -w -X main.commitHash=${COMMIT_HASH} -X main.buildDate=${DATE} -X main.version=${VERSION} -X github.com/loft-sh/devspace/pkg/devspace/config/localcache.EncryptionKey=$ENCRYPTION_KEY"
 
-if [[ -z "${DEVSPACE_BUILD_ARCHS}" ]]; then
-    DEVSPACE_BUILD_ARCHS="amd64 arm64"
-fi
+  if [[ -z "${DEVSPACE_BUILD_PLATFORMS}" ]]; then
+      DEVSPACE_BUILD_PLATFORMS="linux windows darwin"
+  fi
+
+  if [[ -z "${DEVSPACE_BUILD_ARCHS}" ]]; then
+      DEVSPACE_BUILD_ARCHS="amd64 arm64"
+  fi
+fi  
 
 # Create the release directory
 mkdir -p "${DEVSPACE_ROOT}/release"
@@ -70,37 +77,44 @@ mkdir -p "${DEVSPACE_ROOT}/release"
 # build bin data
 # $GOPATH/bin/go-bindata -o assets/assets.go -pkg assets release/devspacehelper release/ui.tar.gz component-chart-$COMPONENT_CHART_VERSION.tgz
 
-for OS in ${DEVSPACE_BUILD_PLATFORMS[@]}; do
-  for ARCH in ${DEVSPACE_BUILD_ARCHS[@]}; do
-    NAME="devspace-${OS}-${ARCH}"
-    if [[ "${OS}" == "windows" ]]; then
-      NAME="${NAME}.exe"
-    fi
-    
-    # darwin 386 is deprecated and shouldn't be used anymore
-    if [[ "${ARCH}" == "386" && "${OS}" == "darwin" ]]; then
-        echo "Building for ${OS}/${ARCH} not supported."
-        continue
-    fi
-    
-    # arm64 build is only supported for darwin
-    if [[ "${ARCH}" == "arm64" && "${OS}" == "windows" ]]; then
-        echo "Building for ${OS}/${ARCH} not supported."
-        continue
-    fi
-    
-    echo "Building for ${OS}/${ARCH}"
-    
-    # build darwin with CGO_ENABLED=1
-    if [[ "${OS}" == "darwin" ]]; then
-      CGO_ENABLED=1
-    else
-      CGO_ENABLED=0 
-    fi
-    
-    # build the DevSpace binary
-    CGO_ENABLED=${CGO_ENABLED} GOARCH=${ARCH} GOOS=${OS} ${GO_BUILD_CMD} -ldflags "${GO_BUILD_LDFLAGS}"\
-                  -o "${DEVSPACE_ROOT}/release/${NAME}" .
-    shasum -a 256 "${DEVSPACE_ROOT}/release/${NAME}" > "${DEVSPACE_ROOT}/release/${NAME}".sha256
+if [[ "${FIPS_ENABLE}" == "yes" ]]; then
+  # build the DevSpace binary
+  CGO_ENABLED=1 GOARCH=amd64 GOOS=linux GOEXPERIMENT=boringcrypto ${GO_BUILD_CMD} -ldflags "${GO_BUILD_LDFLAGS}"\
+                -o "${DEVSPACE_ROOT}/release/${NAME}" .
+  shasum -a 256 "${DEVSPACE_ROOT}/release/${NAME}" > "${DEVSPACE_ROOT}/release/${NAME}".sha256
+else    
+  for OS in ${DEVSPACE_BUILD_PLATFORMS[@]}; do
+    for ARCH in ${DEVSPACE_BUILD_ARCHS[@]}; do
+      NAME="devspace-${OS}-${ARCH}"
+      if [[ "${OS}" == "windows" ]]; then
+        NAME="${NAME}.exe"
+      fi
+      
+      # darwin 386 is deprecated and shouldn't be used anymore
+      if [[ "${ARCH}" == "386" && "${OS}" == "darwin" ]]; then
+          echo "Building for ${OS}/${ARCH} not supported."
+          continue
+      fi
+      
+      # arm64 build is only supported for darwin
+      if [[ "${ARCH}" == "arm64" && "${OS}" == "windows" ]]; then
+          echo "Building for ${OS}/${ARCH} not supported."
+          continue
+      fi
+      
+      echo "Building for ${OS}/${ARCH}"
+      
+      # build darwin with CGO_ENABLED=1
+      if [[ "${OS}" == "darwin" ]]; then
+        CGO_ENABLED=1
+      else
+        CGO_ENABLED=0 
+      fi
+      
+      # build the DevSpace binary
+      CGO_ENABLED=${CGO_ENABLED} GOARCH=${ARCH} GOOS=${OS} ${GO_BUILD_CMD} -ldflags "${GO_BUILD_LDFLAGS}"\
+                    -o "${DEVSPACE_ROOT}/release/${NAME}" .
+      shasum -a 256 "${DEVSPACE_ROOT}/release/${NAME}" > "${DEVSPACE_ROOT}/release/${NAME}".sha256
+    done
   done
-done
+fi
