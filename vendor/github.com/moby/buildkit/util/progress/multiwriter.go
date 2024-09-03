@@ -65,7 +65,7 @@ func (ps *MultiWriter) Write(id string, v interface{}) error {
 		Sys:       v,
 		meta:      ps.meta,
 	}
-	return ps.writeRawProgress(p)
+	return ps.WriteRawProgress(p)
 }
 
 func (ps *MultiWriter) WriteRawProgress(p *Progress) error {

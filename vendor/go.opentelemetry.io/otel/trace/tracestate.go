@@ -21,7 +21,7 @@ import (
 	"strings"
 )
 
-const (
+var (
 	maxListMembers = 32
 
 	listDelimiter = ","
@@ -32,17 +32,15 @@ const (
 	withTenantKeyFormat = `[a-z0-9][_0-9a-z\-\*\/]{0,240}@[a-z][_0-9a-z\-\*\/]{0,13}`
 	valueFormat         = `[\x20-\x2b\x2d-\x3c\x3e-\x7e]{0,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]`
 
+	keyRe    = regexp.MustCompile(`^((` + noTenantKeyFormat + `)|(` + withTenantKeyFormat + `))$`)
+	valueRe  = regexp.MustCompile(`^(` + valueFormat + `)$`)
+	memberRe = regexp.MustCompile(`^\s*((` + noTenantKeyFormat + `)|(` + withTenantKeyFormat + `))=(` + valueFormat + `)\s*$`)
+
 	errInvalidKey    errorConst = "invalid tracestate key"
 	errInvalidValue  errorConst = "invalid tracestate value"
 	errInvalidMember errorConst = "invalid tracestate list-member"
 	errMemberNumber  errorConst = "too many list-members in tracestate"
 	errDuplicate     errorConst = "duplicate list-member in tracestate"
-)
-
-var (
-	keyRe    = regexp.MustCompile(`^((` + noTenantKeyFormat + `)|(` + withTenantKeyFormat + `))$`)
-	valueRe  = regexp.MustCompile(`^(` + valueFormat + `)$`)
-	memberRe = regexp.MustCompile(`^\s*((` + noTenantKeyFormat + `)|(` + withTenantKeyFormat + `))=(` + valueFormat + `)\s*$`)
 )
 
 type member struct {
@@ -70,6 +68,7 @@ func parseMember(m string) (member, error) {
 		Key:   matches[1],
 		Value: matches[4],
 	}, nil
+
 }
 
 // String encodes member into a string compliant with the W3C Trace Context
@@ -172,8 +171,7 @@ func (ts TraceState) Get(key string) string {
 // specification an error is returned with the original TraceState.
 //
 // If adding a new list-member means the TraceState would have more members
-// then is allowed, the new list-member will be inserted and the right-most
-// list-member will be dropped in the returned TraceState.
+// than is allowed an error is returned instead with the original TraceState.
 func (ts TraceState) Insert(key, value string) (TraceState, error) {
 	m, err := newMember(key, value)
 	if err != nil {
@@ -181,10 +179,17 @@ func (ts TraceState) Insert(key, value string) (TraceState, error) {
 	}
 
 	cTS := ts.Delete(key)
-	if cTS.Len()+1 <= maxListMembers {
-		cTS.list = append(cTS.list, member{})
+	if cTS.Len()+1 > maxListMembers {
+		// TODO (MrAlias): When the second version of the Trace Context
+		// specification is published this needs to not return an error.
+		// Instead it should drop the "right-most" member and insert the new
+		// member at the front.
+		//
+		// https://github.com/w3c/trace-context/pull/448
+		return ts, fmt.Errorf("failed to insert: %w", errMemberNumber)
 	}
-	// When the number of members exceeds capacity, drop the "right-most".
+
+	cTS.list = append(cTS.list, member{})
 	copy(cTS.list[1:], cTS.list)
 	cTS.list[0] = m
 

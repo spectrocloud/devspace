@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 )
 
 type pidProvider func() int
@@ -39,12 +39,7 @@ var (
 	defaultExecutablePathProvider executablePathProvider = os.Executable
 	defaultCommandArgsProvider    commandArgsProvider    = func() []string { return os.Args }
 	defaultOwnerProvider          ownerProvider          = user.Current
-	defaultRuntimeNameProvider    runtimeNameProvider    = func() string {
-		if runtime.Compiler == "gc" {
-			return "go"
-		}
-		return runtime.Compiler
-	}
+	defaultRuntimeNameProvider    runtimeNameProvider    = func() string { return runtime.Compiler }
 	defaultRuntimeVersionProvider runtimeVersionProvider = runtime.Version
 	defaultRuntimeOSProvider      runtimeOSProvider      = func() string { return runtime.GOOS }
 	defaultRuntimeArchProvider    runtimeArchProvider    = func() string { return runtime.GOARCH }
@@ -120,14 +115,14 @@ type processRuntimeDescriptionDetector struct{}
 // Detect returns a *Resource that describes the process identifier (PID) of the
 // executing process.
 func (processPIDDetector) Detect(ctx context.Context) (*Resource, error) {
-	return NewWithAttributes(semconv.SchemaURL, semconv.ProcessPID(pid())), nil
+	return NewWithAttributes(semconv.SchemaURL, semconv.ProcessPIDKey.Int(pid())), nil
 }
 
 // Detect returns a *Resource that describes the name of the process executable.
 func (processExecutableNameDetector) Detect(ctx context.Context) (*Resource, error) {
 	executableName := filepath.Base(commandArgs()[0])
 
-	return NewWithAttributes(semconv.SchemaURL, semconv.ProcessExecutableName(executableName)), nil
+	return NewWithAttributes(semconv.SchemaURL, semconv.ProcessExecutableNameKey.String(executableName)), nil
 }
 
 // Detect returns a *Resource that describes the full path of the process executable.
@@ -137,13 +132,13 @@ func (processExecutablePathDetector) Detect(ctx context.Context) (*Resource, err
 		return nil, err
 	}
 
-	return NewWithAttributes(semconv.SchemaURL, semconv.ProcessExecutablePath(executablePath)), nil
+	return NewWithAttributes(semconv.SchemaURL, semconv.ProcessExecutablePathKey.String(executablePath)), nil
 }
 
 // Detect returns a *Resource that describes all the command arguments as received
 // by the process.
 func (processCommandArgsDetector) Detect(ctx context.Context) (*Resource, error) {
-	return NewWithAttributes(semconv.SchemaURL, semconv.ProcessCommandArgs(commandArgs()...)), nil
+	return NewWithAttributes(semconv.SchemaURL, semconv.ProcessCommandArgsKey.StringSlice(commandArgs())), nil
 }
 
 // Detect returns a *Resource that describes the username of the user that owns the
@@ -154,18 +149,18 @@ func (processOwnerDetector) Detect(ctx context.Context) (*Resource, error) {
 		return nil, err
 	}
 
-	return NewWithAttributes(semconv.SchemaURL, semconv.ProcessOwner(owner.Username)), nil
+	return NewWithAttributes(semconv.SchemaURL, semconv.ProcessOwnerKey.String(owner.Username)), nil
 }
 
 // Detect returns a *Resource that describes the name of the compiler used to compile
 // this process image.
 func (processRuntimeNameDetector) Detect(ctx context.Context) (*Resource, error) {
-	return NewWithAttributes(semconv.SchemaURL, semconv.ProcessRuntimeName(runtimeName())), nil
+	return NewWithAttributes(semconv.SchemaURL, semconv.ProcessRuntimeNameKey.String(runtimeName())), nil
 }
 
 // Detect returns a *Resource that describes the version of the runtime of this process.
 func (processRuntimeVersionDetector) Detect(ctx context.Context) (*Resource, error) {
-	return NewWithAttributes(semconv.SchemaURL, semconv.ProcessRuntimeVersion(runtimeVersion())), nil
+	return NewWithAttributes(semconv.SchemaURL, semconv.ProcessRuntimeVersionKey.String(runtimeVersion())), nil
 }
 
 // Detect returns a *Resource that describes the runtime of this process.
@@ -175,6 +170,6 @@ func (processRuntimeDescriptionDetector) Detect(ctx context.Context) (*Resource,
 
 	return NewWithAttributes(
 		semconv.SchemaURL,
-		semconv.ProcessRuntimeDescription(runtimeDescription),
+		semconv.ProcessRuntimeDescriptionKey.String(runtimeDescription),
 	), nil
 }

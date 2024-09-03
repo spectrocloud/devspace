@@ -439,5 +439,10 @@ func ParseRepositoryInfo(reposName reference.Named) (*RepositoryInfo, error) {
 // for that.
 func ParseSearchIndexInfo(reposName string) (*registry.IndexInfo, error) {
 	indexName, _ := splitReposSearchTerm(reposName)
-	return newIndexInfo(emptyServiceConfig, indexName)
+
+	indexInfo, err := newIndexInfo(emptyServiceConfig, indexName)
+	if err != nil {
+		return nil, err
+	}
+	return indexInfo, nil
 }

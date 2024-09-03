@@ -19,7 +19,7 @@ func FollowLinks(root string, paths []string) ([]string, error) {
 	}
 	res := make([]string, 0, len(r.resolved))
 	for r := range r.resolved {
-		res = append(res, filepath.ToSlash(r))
+		res = append(res, r)
 	}
 	sort.Strings(res)
 	return dedupePaths(res), nil
@@ -31,12 +31,6 @@ type symlinkResolver struct {
 }
 
 func (r *symlinkResolver) append(p string) error {
-	if runtime.GOOS == "windows" && filepath.IsAbs(filepath.FromSlash(p)) {
-		absParts := strings.SplitN(p, ":", 2)
-		if len(absParts) == 2 {
-			p = absParts[1]
-		}
-	}
 	p = filepath.Join(".", p)
 	current := "."
 	for {
@@ -47,6 +41,7 @@ func (r *symlinkResolver) append(p string) error {
 		if err != nil {
 			return err
 		}
+
 		p = ""
 		if len(parts) == 2 {
 			p = parts[1]
@@ -81,7 +76,7 @@ func (r *symlinkResolver) readSymlink(p string, allowWildcard bool) ([]string, e
 	if allowWildcard && containsWildcards(base) {
 		fis, err := os.ReadDir(filepath.Dir(realPath))
 		if err != nil {
-			if isNotFound(err) {
+			if errors.Is(err, os.ErrNotExist) {
 				return nil, nil
 			}
 			return nil, errors.Wrap(err, "readdir")
@@ -101,7 +96,7 @@ func (r *symlinkResolver) readSymlink(p string, allowWildcard bool) ([]string, e
 
 	fi, err := os.Lstat(realPath)
 	if err != nil {
-		if isNotFound(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			return nil, nil
 		}
 		return nil, errors.WithStack(err)
@@ -144,7 +139,7 @@ func dedupePaths(in []string) []string {
 		if s == "." {
 			return nil
 		}
-		if strings.HasPrefix(s, last+"/") {
+		if strings.HasPrefix(s, last+string(filepath.Separator)) {
 			continue
 		}
 		out = append(out, s)

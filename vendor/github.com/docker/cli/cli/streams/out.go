@@ -8,9 +8,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Out is an output stream to write normal program output. It implements
-// an [io.Writer], with additional utilities for detecting whether a terminal
-// is connected, getting the TTY size, and putting the terminal in raw mode.
+// Out is an output stream used by the DockerCli to write normal program
+// output.
 type Out struct {
 	commonStream
 	out io.Writer
@@ -20,29 +19,23 @@ func (o *Out) Write(p []byte) (int, error) {
 	return o.out.Write(p)
 }
 
-// SetRawTerminal puts the output of the terminal connected to the stream
-// into raw mode.
-//
-// On UNIX, this does nothing. On Windows, it disables LF -> CRLF/ translation.
-// It is a no-op if Out is not a TTY, or if the "NORAW" environment variable is
-// set to a non-empty value.
+// SetRawTerminal sets raw mode on the input terminal
 func (o *Out) SetRawTerminal() (err error) {
-	if !o.isTerminal || os.Getenv("NORAW") != "" {
+	if os.Getenv("NORAW") != "" || !o.commonStream.isTerminal {
 		return nil
 	}
-	o.state, err = term.SetRawTerminalOutput(o.fd)
+	o.commonStream.state, err = term.SetRawTerminalOutput(o.commonStream.fd)
 	return err
 }
 
-// GetTtySize returns the height and width in characters of the TTY, or
-// zero for both if no TTY is connected.
-func (o *Out) GetTtySize() (height uint, width uint) {
+// GetTtySize returns the height and width in characters of the tty
+func (o *Out) GetTtySize() (uint, uint) {
 	if !o.isTerminal {
 		return 0, 0
 	}
 	ws, err := term.GetWinsize(o.fd)
 	if err != nil {
-		logrus.WithError(err).Debug("Error getting TTY size")
+		logrus.Debugf("Error getting size: %s", err)
 		if ws == nil {
 			return 0, 0
 		}
@@ -50,9 +43,8 @@ func (o *Out) GetTtySize() (height uint, width uint) {
 	return uint(ws.Height), uint(ws.Width)
 }
 
-// NewOut returns a new [Out] from an [io.Writer].
+// NewOut returns a new Out object from a Writer
 func NewOut(out io.Writer) *Out {
-	o := &Out{out: out}
-	o.fd, o.isTerminal = term.GetFdInfo(out)
-	return o
+	fd, isTerminal := term.GetFdInfo(out)
+	return &Out{commonStream: commonStream{fd: fd, isTerminal: isTerminal}, out: out}
 }

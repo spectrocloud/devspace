@@ -1,7 +1,6 @@
 package registry // import "github.com/docker/docker/registry"
 
 import (
-	"context"
 	"crypto/tls"
 	"encoding/json"
 	"io"
@@ -9,9 +8,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/containerd/containerd/log"
 	"github.com/docker/distribution/registry/client/transport"
 	"github.com/docker/docker/api/types/registry"
+	"github.com/sirupsen/logrus"
 )
 
 // v1PingResult contains the information returned when pinging a registry. It
@@ -36,13 +35,13 @@ type v1Endpoint struct {
 
 // newV1Endpoint parses the given address to return a registry endpoint.
 // TODO: remove. This is only used by search.
-func newV1Endpoint(index *registry.IndexInfo, headers http.Header) (*v1Endpoint, error) {
+func newV1Endpoint(index *registry.IndexInfo, userAgent string, metaHeaders http.Header) (*v1Endpoint, error) {
 	tlsConfig, err := newTLSConfig(index.Name, index.Secure)
 	if err != nil {
 		return nil, err
 	}
 
-	endpoint, err := newV1EndpointFromStr(GetAuthConfigKey(index), tlsConfig, headers)
+	endpoint, err := newV1EndpointFromStr(GetAuthConfigKey(index), tlsConfig, userAgent, metaHeaders)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +55,7 @@ func newV1Endpoint(index *registry.IndexInfo, headers http.Header) (*v1Endpoint,
 }
 
 func validateEndpoint(endpoint *v1Endpoint) error {
-	log.G(context.TODO()).Debugf("pinging registry endpoint %s", endpoint)
+	logrus.Debugf("pinging registry endpoint %s", endpoint)
 
 	// Try HTTPS ping to registry
 	endpoint.URL.Scheme = "https"
@@ -68,7 +67,7 @@ func validateEndpoint(endpoint *v1Endpoint) error {
 		}
 
 		// If registry is insecure and HTTPS failed, fallback to HTTP.
-		log.G(context.TODO()).WithError(err).Debugf("error from registry %q marked as insecure - insecurely falling back to HTTP", endpoint)
+		logrus.WithError(err).Debugf("error from registry %q marked as insecure - insecurely falling back to HTTP", endpoint)
 		endpoint.URL.Scheme = "http"
 
 		var err2 error
@@ -101,7 +100,7 @@ func trimV1Address(address string) (string, error) {
 	return address, nil
 }
 
-func newV1EndpointFromStr(address string, tlsConfig *tls.Config, headers http.Header) (*v1Endpoint, error) {
+func newV1EndpointFromStr(address string, tlsConfig *tls.Config, userAgent string, metaHeaders http.Header) (*v1Endpoint, error) {
 	if !strings.HasPrefix(address, "http://") && !strings.HasPrefix(address, "https://") {
 		address = "https://" + address
 	}
@@ -122,7 +121,7 @@ func newV1EndpointFromStr(address string, tlsConfig *tls.Config, headers http.He
 	return &v1Endpoint{
 		IsSecure: tlsConfig == nil || !tlsConfig.InsecureSkipVerify,
 		URL:      uri,
-		client:   httpClient(transport.NewTransport(tr, Headers("", headers)...)),
+		client:   httpClient(transport.NewTransport(tr, Headers(userAgent, metaHeaders)...)),
 	}, nil
 }
 
@@ -139,7 +138,7 @@ func (e *v1Endpoint) ping() (v1PingResult, error) {
 		return v1PingResult{}, nil
 	}
 
-	log.G(context.TODO()).Debugf("attempting v1 ping for registry endpoint %s", e)
+	logrus.Debugf("attempting v1 ping for registry endpoint %s", e)
 	pingURL := e.String() + "_ping"
 	req, err := http.NewRequest(http.MethodGet, pingURL, nil)
 	if err != nil {
@@ -164,13 +163,13 @@ func (e *v1Endpoint) ping() (v1PingResult, error) {
 		Standalone: true,
 	}
 	if err := json.Unmarshal(jsonString, &info); err != nil {
-		log.G(context.TODO()).WithError(err).Debug("error unmarshaling _ping response")
+		logrus.WithError(err).Debug("error unmarshaling _ping response")
 		// don't stop here. Just assume sane defaults
 	}
 	if hdr := resp.Header.Get("X-Docker-Registry-Version"); hdr != "" {
 		info.Version = hdr
 	}
-	log.G(context.TODO()).Debugf("v1PingResult.Version: %q", info.Version)
+	logrus.Debugf("v1PingResult.Version: %q", info.Version)
 
 	standalone := resp.Header.Get("X-Docker-Registry-Standalone")
 
@@ -181,6 +180,6 @@ func (e *v1Endpoint) ping() (v1PingResult, error) {
 		// there is a header set, and it is not "true" or "1", so assume fails
 		info.Standalone = false
 	}
-	log.G(context.TODO()).Debugf("v1PingResult.Standalone: %t", info.Standalone)
+	logrus.Debugf("v1PingResult.Standalone: %t", info.Standalone)
 	return info, nil
 }
