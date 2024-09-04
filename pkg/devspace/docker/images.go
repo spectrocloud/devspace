@@ -4,29 +4,29 @@ import (
 	"context"
 	"strings"
 
-	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types"
 	"github.com/loft-sh/devspace/pkg/util/log"
 
 	"github.com/docker/docker/api/types/filters"
 )
 
 // DeleteImageByName deletes an image by name
-func (c *client) DeleteImageByName(ctx context.Context, imageName string, log log.Logger) ([]image.DeleteResponse, error) {
+func (c *client) DeleteImageByName(ctx context.Context, imageName string, log log.Logger) ([]types.ImageDeleteResponseItem, error) {
 	return c.DeleteImageByFilter(ctx, filters.NewArgs(filters.Arg("reference", strings.TrimSpace(imageName))), log)
 }
 
 // DeleteImageByFilter deletes an image by filter
-func (c *client) DeleteImageByFilter(ctx context.Context, filter filters.Args, log log.Logger) ([]image.DeleteResponse, error) {
-	summaries, err := c.ImageList(ctx, image.ListOptions{
+func (c *client) DeleteImageByFilter(ctx context.Context, filter filters.Args, log log.Logger) ([]types.ImageDeleteResponseItem, error) {
+	summaries, err := c.ImageList(ctx, types.ImageListOptions{
 		Filters: filter,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	responseItems := make([]image.DeleteResponse, 0, 128)
+	responseItems := make([]types.ImageDeleteResponseItem, 0, 128)
 	for _, summary := range summaries {
-		deleteResponse, err := c.ImageRemove(ctx, summary.ID, image.RemoveOptions{
+		deleteResponse, err := c.ImageRemove(ctx, summary.ID, types.ImageRemoveOptions{
 			PruneChildren: true,
 			Force:         true,
 		})

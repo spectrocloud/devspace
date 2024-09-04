@@ -58,7 +58,7 @@ type Info struct {
 	Labels             []string
 	ExperimentalBuild  bool
 	ServerVersion      string
-	Runtimes           map[string]RuntimeWithStatus
+	Runtimes           map[string]Runtime
 	DefaultRuntime     string
 	Swarm              swarm.Info
 	// LiveRestoreEnabled determines whether containers should be kept
@@ -73,7 +73,6 @@ type Info struct {
 	SecurityOptions     []string
 	ProductLicense      string               `json:",omitempty"`
 	DefaultAddressPools []NetworkAddressPool `json:",omitempty"`
-	CDISpecDirs         []string
 
 	// Legacy API fields for older API versions.
 	legacyFields

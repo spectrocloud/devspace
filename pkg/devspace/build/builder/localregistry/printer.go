@@ -2,9 +2,11 @@ package localregistry
 
 import (
 	"context"
+	"github.com/containerd/console"
 	"github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/util/progress/progressui"
 	"github.com/moby/buildkit/util/progress/progresswriter"
+
 	"io"
 )
 
@@ -32,14 +34,18 @@ func (p *printer) Status() chan *client.SolveStatus {
 func NewPrinter(ctx context.Context, out io.Writer) (progresswriter.Writer, error) {
 	statusCh := make(chan *client.SolveStatus)
 	doneCh := make(chan struct{})
-
 	pw := &printer{
 		status: statusCh,
 		done:   doneCh,
 	}
+	// Use the proper console.Console implementation, not term.Terminal
+	cons := console.Current() // Assuming the second argument is for setting raw mode
 	go func() {
-		// not using shared context to not disrupt display but let is finish reporting errors
-		_, pw.err = progressui.DisplaySolveStatus(ctx, "", nil, out, statusCh)
+		// Correctly handle the two return values from DisplaySolveStatus
+		_, err := progressui.DisplaySolveStatus(ctx, cons, out, statusCh)
+		if err != nil {
+			pw.err = err
+		}
 		close(doneCh)
 	}()
 	return pw, nil
