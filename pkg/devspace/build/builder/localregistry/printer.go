@@ -38,10 +38,8 @@ func NewPrinter(ctx context.Context, out io.Writer) (progresswriter.Writer, erro
 		status: statusCh,
 		done:   doneCh,
 	}
-	// Use the proper console.Console implementation, not term.Terminal
-	cons := console.Current() // Assuming the second argument is for setting raw mode
+	cons := console.Current()
 	go func() {
-		// Correctly handle the two return values from DisplaySolveStatus
 		_, err := progressui.DisplaySolveStatus(ctx, cons, out, statusCh)
 		if err != nil {
 			pw.err = err
