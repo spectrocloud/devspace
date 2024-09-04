@@ -4,9 +4,9 @@ import (
 	"context"
 	"strings"
 
+	"github.com/docker/docker/api/types"
 	"github.com/loft-sh/devspace/pkg/util/log"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 )
 
@@ -17,7 +17,7 @@ func (c *client) DeleteImageByName(ctx context.Context, imageName string, log lo
 
 // DeleteImageByFilter deletes an image by filter
 func (c *client) DeleteImageByFilter(ctx context.Context, filter filters.Args, log log.Logger) ([]types.ImageDeleteResponseItem, error) {
-	summary, err := c.ImageList(ctx, types.ImageListOptions{
+	summaries, err := c.ImageList(ctx, types.ImageListOptions{
 		Filters: filter,
 	})
 	if err != nil {
@@ -25,8 +25,8 @@ func (c *client) DeleteImageByFilter(ctx context.Context, filter filters.Args, l
 	}
 
 	responseItems := make([]types.ImageDeleteResponseItem, 0, 128)
-	for _, image := range summary {
-		deleteResponse, err := c.ImageRemove(ctx, image.ID, types.ImageRemoveOptions{
+	for _, summary := range summaries {
+		deleteResponse, err := c.ImageRemove(ctx, summary.ID, types.ImageRemoveOptions{
 			PruneChildren: true,
 			Force:         true,
 		})
