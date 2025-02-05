@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"github.com/docker/docker/api/types/image"
 	"io"
 	"os"
 	"path/filepath"
@@ -244,7 +245,7 @@ func (b *BuildHelper) IsImageAvailableLocally(ctx devspacecontext.Context, docke
 	imageName := imageCache.ResolveImage() + ":" + imageCache.Tag
 
 	dockerAPIClient := dockerClient.DockerAPIClient()
-	imageList, err := dockerAPIClient.ImageList(ctx.Context(), types.ImageListOptions{})
+	imageList, err := dockerAPIClient.ImageList(ctx.Context(), image.ListOptions{})
 	if err != nil {
 		return false, err
 	}
