@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"github.com/docker/docker/api/types/image"
 	"io"
 
 	"github.com/docker/cli/cli/streams"
 	"github.com/docker/distribution/reference"
-	dockertypes "github.com/docker/docker/api/types"
 	dockerregistry "github.com/docker/docker/api/types/registry"
 	"github.com/loft-sh/devspace/pkg/devspace/build/builder/helper"
 	"github.com/loft-sh/devspace/pkg/devspace/config/versions/latest"
@@ -207,7 +207,7 @@ func (b *Builder) pushImage(ctx context.Context, writer io.Writer, imageName str
 		return err
 	}
 
-	out, err := b.client.ImagePush(ctx, reference.FamiliarString(ref), dockertypes.ImagePushOptions{
+	out, err := b.client.ImagePush(ctx, reference.FamiliarString(ref), image.PushOptions{
 		RegistryAuth: encodedAuth,
 	})
 	if err != nil {
