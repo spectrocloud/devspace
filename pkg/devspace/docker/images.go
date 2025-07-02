@@ -2,12 +2,12 @@ package docker
 
 import (
 	"context"
-	"github.com/docker/docker/api/types/image"
 	"strings"
 
 	"github.com/loft-sh/devspace/pkg/util/log"
 
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/image"
 )
 
 // DeleteImageByName deletes an image by name

@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"github.com/docker/docker/api/types/image"
 	"io"
+
+	"github.com/docker/docker/api/types/image"
 
 	"github.com/docker/cli/cli/streams"
 	"github.com/docker/distribution/reference"

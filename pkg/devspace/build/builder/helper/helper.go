@@ -1,7 +1,6 @@
 package helper
 
 import (
-	"github.com/docker/docker/api/types/image"
 	"io"
 	"os"
 	"path/filepath"
@@ -19,6 +18,7 @@ import (
 
 	"github.com/docker/cli/cli/command/image/build"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/loft-sh/devspace/pkg/devspace/config/localcache"
 	"github.com/loft-sh/devspace/pkg/devspace/config/versions/latest"
@@ -249,8 +249,8 @@ func (b *BuildHelper) IsImageAvailableLocally(ctx devspacecontext.Context, docke
 	if err != nil {
 		return false, err
 	}
-	for _, image := range imageList {
-		for _, repoTag := range image.RepoTags {
+	for _, img := range imageList {
+		for _, repoTag := range img.RepoTags {
 			if repoTag == imageName {
 				return true, nil
 			}
