@@ -2,13 +2,14 @@ package docker
 
 import (
 	"context"
-	"github.com/docker/docker/api/types/image"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/docker/docker/api/types/image"
 
 	dockerregistry "github.com/docker/docker/api/types/registry"
 	"github.com/loft-sh/utils/pkg/command"
