@@ -7,8 +7,7 @@ import (
 	"strings"
 	
 	"github.com/docker/cli/cli/streams"
-	"github.com/docker/docker/api/types/image"
-	"github.com/containers/storage/pkg/idtools"
+	"github.com/docker/docker/pkg/idtools"
 	"github.com/docker/docker/pkg/progress"
 	"github.com/docker/docker/pkg/streamformatter"
 	"github.com/loft-sh/devspace/pkg/devspace/build/builder/restart"
@@ -18,7 +17,9 @@ import (
 	"github.com/sirupsen/logrus"
 	
 	"github.com/docker/cli/cli/command/image/build"
-	"github.com/containers/storage/pkg/archive"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/pkg/archive"
 	"github.com/loft-sh/devspace/pkg/devspace/config/localcache"
 	"github.com/loft-sh/devspace/pkg/devspace/config/versions/latest"
 	devspacecontext "github.com/loft-sh/devspace/pkg/devspace/context"
@@ -28,7 +29,6 @@ import (
 	"github.com/loft-sh/utils/pkg/command"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
-	buildtypes "github.com/docker/docker/api/types/build"
 )
 
 var (
@@ -195,10 +195,7 @@ func (b *BuildHelper) ShouldRebuild(ctx devspacecontext.Context, forceRebuild bo
 			return false, errors.Wrap(err, "get context from local dir")
 		}
 		
-		relDockerfile, err = archive.CanonicalTarNameForPath(relDockerfile)
-		if err != nil {
-			return false, errors.Errorf("Error getting tar name: %v", err)
-		}
+		relDockerfile = archive.CanonicalTarNameForPath(relDockerfile)
 		excludes, err := ReadDockerignore(contextDir, relDockerfile)
 		if err != nil {
 			return false, errors.Errorf("Error reading .dockerignore: %v", err)
@@ -264,9 +261,9 @@ func (b *BuildHelper) IsImageAvailableLocally(ctx devspacecontext.Context, docke
 
 // CreateContextStream creates a new context stream that includes the correct docker context, (modified) dockerfile and inject helper
 // if needed.
-func (b *BuildHelper) CreateContextStream(contextPath, dockerfilePath string, entrypoint, cmd []string, log logpkg.Logger) (io.Reader, io.WriteCloser, *streams.Out, *buildtypes.ImageBuildOptions, error) {
+func (b *BuildHelper) CreateContextStream(contextPath, dockerfilePath string, entrypoint, cmd []string, log logpkg.Logger) (io.Reader, io.WriteCloser, *streams.Out, *types.ImageBuildOptions, error) {
 	// Buildoptions
-	options := &buildtypes.ImageBuildOptions{}
+	options := &types.ImageBuildOptions{}
 	if b.ImageConf.BuildArgs != nil {
 		options.BuildArgs = b.ImageConf.BuildArgs
 	}
@@ -303,10 +300,7 @@ func (b *BuildHelper) CreateContextStream(contextPath, dockerfilePath string, en
 	
 	// And canonicalize dockerfile name to a platform-independent one
 	authConfigs, _ := dockerclient.GetAllAuthConfigs()
-	relDockerfile, err = archive.CanonicalTarNameForPath(relDockerfile)
-	if err != nil {
-		return nil, writer, nil, nil, err
-	}
+	relDockerfile = archive.CanonicalTarNameForPath(relDockerfile)
 	excludes, err := ReadDockerignore(contextDir, relDockerfile)
 	if err != nil {
 		return nil, writer, nil, nil, err
@@ -318,7 +312,7 @@ func (b *BuildHelper) CreateContextStream(contextPath, dockerfilePath string, en
 	
 	buildCtx, err := archive.TarWithOptions(contextDir, &archive.TarOptions{
 		ExcludePatterns: excludes,
-		ChownOpts:       &idtools.IDPair{UID: 0, GID: 0},
+		ChownOpts:       &idtools.Identity{UID: 0, GID: 0},
 	})
 	if err != nil {
 		return nil, writer, nil, nil, err
@@ -398,7 +392,7 @@ func (b *BuildHelper) CreateContextStream(contextPath, dockerfilePath string, en
 	outStream := streams.NewOut(writer)
 	progressOutput := streamformatter.NewProgressOutput(outStream)
 	body := progress.NewProgressReader(buildCtx, progressOutput, 0, "", "Sending build context to Docker daemon")
-	buildOptions := &buildtypes.ImageBuildOptions{
+	buildOptions := &types.ImageBuildOptions{
 		Tags:        tags,
 		Dockerfile:  relDockerfile,
 		BuildArgs:   options.BuildArgs,
