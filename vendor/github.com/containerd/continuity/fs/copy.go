@@ -18,12 +18,19 @@ package fs
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 )
+
+var bufferPool = &sync.Pool{
+	New: func() interface{} {
+		buffer := make([]byte, 32*1024)
+		return &buffer
+	},
+}
 
 // XAttrErrorHandler transform a non-nil xattr error.
 // Return nil to ignore an error.
@@ -177,10 +184,6 @@ func copyDirectory(dst, src string, inodes map[uint64]string, o *copyDirOpts) er
 // CopyFile copies the source file to the target.
 // The most efficient means of copying is used for the platform.
 func CopyFile(target, source string) error {
-	return copyFile(target, source)
-}
-
-func openAndCopyFile(target, source string) error {
 	src, err := os.Open(source)
 	if err != nil {
 		return fmt.Errorf("failed to open source %s: %w", source, err)
@@ -192,6 +195,5 @@ func openAndCopyFile(target, source string) error {
 	}
 	defer tgt.Close()
 
-	_, err = io.Copy(tgt, src)
-	return err
+	return copyFileContent(tgt, src)
 }

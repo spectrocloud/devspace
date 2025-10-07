@@ -181,13 +181,6 @@ func (v *VT100) UsedHeight() int {
 }
 
 func (v *VT100) Resize(y, x int) {
-	// add some minimal defaults to handle zero and negative values
-	if x < 6 {
-		x = 6
-	}
-	if y < 1 {
-		y = 1
-	}
 	if y > v.Height {
 		n := y - v.Height
 		for row := 0; row < n; row++ {
@@ -336,10 +329,6 @@ func (v *VT100) advance() {
 }
 
 func (v *VT100) scrollIfNeeded() {
-	if v.Cursor.X >= v.Width {
-		v.Cursor.X = 0
-		v.Cursor.Y++
-	}
 	if v.Cursor.Y >= v.Height {
 		first := v.Content[0]
 		copy(v.Content, v.Content[1:])

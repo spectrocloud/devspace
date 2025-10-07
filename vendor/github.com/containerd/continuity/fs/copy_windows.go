@@ -19,6 +19,7 @@ package fs
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 
 	winio "github.com/Microsoft/go-winio"
@@ -69,6 +70,13 @@ func copyFileInfo(fi os.FileInfo, src, name string) error {
 		return err
 	}
 	return nil
+}
+
+func copyFileContent(dst, src *os.File) error {
+	buf := bufferPool.Get().(*[]byte)
+	_, err := io.CopyBuffer(dst, src, *buf)
+	bufferPool.Put(buf)
+	return err
 }
 
 func copyXAttrs(dst, src string, excludes map[string]struct{}, errorHandler XAttrErrorHandler) error {

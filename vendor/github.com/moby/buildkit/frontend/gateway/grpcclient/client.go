@@ -190,7 +190,7 @@ func (c *grpcClient) Run(ctx context.Context, f client.BuildFunc) (retError erro
 				}
 			}
 			if retError != nil {
-				st, _ := status.FromError(grpcerrors.ToGRPC(ctx, retError))
+				st, _ := status.FromError(grpcerrors.ToGRPC(retError))
 				stp := st.Proto()
 				req.Error = &rpc.Status{
 					Code:    stp.Code,
@@ -478,7 +478,7 @@ func (c *grpcClient) Solve(ctx context.Context, creq client.SolveRequest) (res *
 	return res, nil
 }
 
-func (c *grpcClient) ResolveImageConfig(ctx context.Context, ref string, opt llb.ResolveImageConfigOpt) (string, digest.Digest, []byte, error) {
+func (c *grpcClient) ResolveImageConfig(ctx context.Context, ref string, opt llb.ResolveImageConfigOpt) (digest.Digest, []byte, error) {
 	var p *opspb.Platform
 	if platform := opt.Platform; platform != nil {
 		p = &opspb.Platform{
@@ -489,27 +489,19 @@ func (c *grpcClient) ResolveImageConfig(ctx context.Context, ref string, opt llb
 			OSFeatures:   platform.OSFeatures,
 		}
 	}
-
 	resp, err := c.client.ResolveImageConfig(ctx, &pb.ResolveImageConfigRequest{
-		ResolverType:   int32(opt.ResolverType),
-		Ref:            ref,
-		Platform:       p,
-		ResolveMode:    opt.ResolveMode,
-		LogName:        opt.LogName,
-		SessionID:      opt.Store.SessionID,
-		StoreID:        opt.Store.StoreID,
-		SourcePolicies: opt.SourcePolicies,
+		ResolverType: int32(opt.ResolverType),
+		Ref:          ref,
+		Platform:     p,
+		ResolveMode:  opt.ResolveMode,
+		LogName:      opt.LogName,
+		SessionID:    opt.Store.SessionID,
+		StoreID:      opt.Store.StoreID,
 	})
 	if err != nil {
-		return "", "", nil, err
+		return "", nil, err
 	}
-	newRef := resp.Ref
-	if newRef == "" {
-		// No ref returned, use the original one.
-		// This could occur if the version of buildkitd is too old.
-		newRef = ref
-	}
-	return newRef, resp.Digest, resp.Config, nil
+	return resp.Digest, resp.Config, nil
 }
 
 func (c *grpcClient) BuildOpts() client.BuildOpts {
@@ -800,7 +792,6 @@ func (c *grpcClient) NewContainer(ctx context.Context, req client.NewContainerRe
 		Constraints: req.Constraints,
 		Network:     req.NetMode,
 		ExtraHosts:  req.ExtraHosts,
-		Hostname:    req.Hostname,
 	})
 	if err != nil {
 		return nil, err
@@ -814,7 +805,6 @@ func (c *grpcClient) NewContainer(ctx context.Context, req client.NewContainerRe
 
 	return &container{
 		client:   c.client,
-		caps:     c.caps,
 		id:       id,
 		execMsgs: c.execMsgs,
 	}, nil
@@ -822,7 +812,6 @@ func (c *grpcClient) NewContainer(ctx context.Context, req client.NewContainerRe
 
 type container struct {
 	client   pb.LLBBridgeClient
-	caps     apicaps.CapSet
 	id       string
 	execMsgs *messageForwarder
 }
@@ -830,12 +819,6 @@ type container struct {
 func (ctr *container) Start(ctx context.Context, req client.StartRequest) (client.ContainerProcess, error) {
 	pid := fmt.Sprintf("%s:%s", ctr.id, identity.NewID())
 	msgs := ctr.execMsgs.Register(pid)
-
-	if len(req.SecretEnv) > 0 {
-		if err := ctr.caps.Supports(pb.CapGatewayExecSecretEnv); err != nil {
-			return nil, err
-		}
-	}
 
 	init := &pb.InitMessage{
 		ContainerID: ctr.id,
@@ -845,9 +828,8 @@ func (ctr *container) Start(ctx context.Context, req client.StartRequest) (clien
 			Cwd:  req.Cwd,
 			User: req.User,
 		},
-		Tty:       req.Tty,
-		Security:  req.SecurityMode,
-		Secretenv: req.SecretEnv,
+		Tty:      req.Tty,
+		Security: req.SecurityMode,
 	}
 	init.Meta.RemoveMountStubsRecursive = req.RemoveMountStubsRecursive
 	if req.Stdin != nil {
@@ -945,11 +927,11 @@ func (ctr *container) Start(ctx context.Context, req client.StartRequest) (clien
 
 			if msg == nil {
 				// empty message from ctx cancel, so just start shutting down
-				// input
+				// input, but continue processing more exit/done messages
 				closeDoneOnce.Do(func() {
 					close(done)
 				})
-				return ctx.Err()
+				continue
 			}
 
 			if file := msg.GetFile(); file != nil {
