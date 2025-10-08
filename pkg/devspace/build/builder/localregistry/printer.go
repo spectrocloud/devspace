@@ -2,7 +2,6 @@ package localregistry
 
 import (
 	"context"
-	"github.com/containerd/console"
 	"github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/util/progress/progressui"
 	"github.com/moby/buildkit/util/progress/progresswriter"
@@ -38,10 +37,10 @@ func NewPrinter(ctx context.Context, out io.Writer) (progresswriter.Writer, erro
 		status: statusCh,
 		done:   doneCh,
 	}
-	cons := console.Current()
 	go func() {
 		// not using shared context to not disrupt display but let is finish reporting errors
-		_, pw.err = progressui.DisplaySolveStatus(ctx, cons, out, statusCh)
+		_, pw.err = progressui.DisplaySolveStatus(ctx, "", nil, out, statusCh)
+
 		close(doneCh)
 	}()
 	return pw, nil

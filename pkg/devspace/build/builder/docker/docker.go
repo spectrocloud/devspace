@@ -6,11 +6,11 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/docker/docker/api/types/image"
-
+	"github.com/distribution/reference"
 	"github.com/docker/cli/cli/streams"
-	"github.com/docker/distribution/reference"
+	"github.com/docker/docker/api/types/image"
 	dockerregistry "github.com/docker/docker/api/types/registry"
+	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/loft-sh/devspace/pkg/devspace/build/builder/helper"
 	"github.com/loft-sh/devspace/pkg/devspace/config/versions/latest"
 	devspacecontext "github.com/loft-sh/devspace/pkg/devspace/context"
@@ -18,10 +18,7 @@ import (
 	"github.com/loft-sh/devspace/pkg/devspace/kubectl"
 	"github.com/loft-sh/devspace/pkg/devspace/pullsecrets"
 	command2 "github.com/loft-sh/utils/pkg/command"
-
 	"github.com/pkg/errors"
-
-	"github.com/docker/docker/pkg/jsonmessage"
 )
 
 // EngineName is the name of the building engine
@@ -170,7 +167,7 @@ func (b *Builder) BuildImage(ctx devspacecontext.Context, contextPath, dockerfil
 			completeArgs = append(completeArgs, command[1:]...)
 			err = command2.Command(ctx.Context(), ctx.WorkingDir(), ctx.Environ(), writer, writer, nil, command[0], completeArgs...)
 			if err != nil {
-				ctx.Log().Info(errors.Errorf("error during image load to kind cluster: %v", err))
+				return errors.Errorf("error during image load to kind cluster: %v", err)
 			}
 			ctx.Log().Info("Image loaded to kind cluster")
 		}

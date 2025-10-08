@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/docker/docker/client"
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
@@ -40,13 +41,31 @@ func Write(tag name.Tag, img v1.Image, options ...Option) (string, error) {
 		return "", err
 	}
 
+	// If we already have this image by this image ID, we can skip loading it.
+	id, err := img.ConfigName()
+	if err != nil {
+		return "", fmt.Errorf("computing image ID: %w", err)
+	}
+	if resp, _, err := o.client.ImageInspectWithRaw(o.ctx, id.String()); err == nil {
+		want := tag.String()
+
+		// If we already have this tag, we can skip tagging it.
+		for _, have := range resp.RepoTags {
+			if have == want {
+				return "", nil
+			}
+		}
+
+		return "", o.client.ImageTag(o.ctx, id.String(), want)
+	}
+
 	pr, pw := io.Pipe()
 	go func() {
 		pw.CloseWithError(tarball.Write(tag, img, pw))
 	}()
 
 	// write the image in docker save format first, then load it
-	resp, err := o.client.ImageLoad(o.ctx, pr, false)
+	resp, err := o.client.ImageLoad(o.ctx, pr, client.ImageLoadWithQuiet(false))
 	if err != nil {
 		return "", fmt.Errorf("error loading image: %w", err)
 	}

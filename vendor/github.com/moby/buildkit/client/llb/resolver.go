@@ -3,7 +3,6 @@ package llb
 import (
 	"context"
 
-	spb "github.com/moby/buildkit/sourcepolicy/pb"
 	digest "github.com/opencontainers/go-digest"
 	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
 )
@@ -32,7 +31,7 @@ func WithLayerLimit(l int) ImageOption {
 
 // ImageMetaResolver can resolve image config metadata from a reference
 type ImageMetaResolver interface {
-	ResolveImageConfig(ctx context.Context, ref string, opt ResolveImageConfigOpt) (string, digest.Digest, []byte, error)
+	ResolveImageConfig(ctx context.Context, ref string, opt ResolveImageConfigOpt) (digest.Digest, []byte, error)
 }
 
 type ResolverType int
@@ -50,8 +49,6 @@ type ResolveImageConfigOpt struct {
 	LogName     string
 
 	Store ResolveImageConfigOptStore
-
-	SourcePolicies []*spb.Policy
 }
 
 type ResolveImageConfigOptStore struct {

@@ -7,7 +7,6 @@ import (
 	"net"
 	"strings"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -18,13 +17,14 @@ import (
 	dockerclient "github.com/loft-sh/devspace/pkg/devspace/docker"
 	"github.com/pkg/errors"
 
+	"github.com/docker/docker/api/types/build"
 	buildkit "github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/session/auth/authprovider"
 	"github.com/moby/buildkit/session/upload/uploadprovider"
 )
 
-func RemoteBuild(ctx devspacecontext.Context, podName, namespace string, buildContext io.Reader, writer io.Writer, buildOptions *types.ImageBuildOptions) error {
+func RemoteBuild(ctx devspacecontext.Context, podName, namespace string, buildContext io.Reader, writer io.Writer, buildOptions *build.ImageBuildOptions) error {
 	conn, err := ExecConn(ctx, namespace, podName, localregistry.BuildKitContainer, []string{"buildctl", "dial-stdio"})
 	if err != nil {
 		return errors.Wrap(err, "connect to buildkit pod")

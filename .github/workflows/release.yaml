@@ -28,14 +28,14 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 20
           registry-url: https://registry.npmjs.org/
       - id: get_version
         run: |
           RELEASE_VERSION=$(echo $GITHUB_REF | sed -nE 's!refs/tags/!!p')
           echo "::set-output name=release_version::$RELEASE_VERSION"
       - name: Cache node modules
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: ui/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/ui/package-lock.json') }}
@@ -76,8 +76,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ui-tar
-      - name: install-upx
-        run: brew install upx
       - name: Compile binaries
         run: ./hack/build-all.bash
         env:
@@ -100,7 +98,7 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 20 
           registry-url: https://registry.npmjs.org/
       - id: get_version
         run: |
