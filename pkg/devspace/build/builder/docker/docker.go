@@ -6,16 +6,9 @@ import (
 	"encoding/json"
 	"io"
 
-<<<<<<< HEAD
-	"github.com/docker/docker/api/types/image"
-
-	"github.com/docker/cli/cli/streams"
-	"github.com/docker/distribution/reference"
-=======
 	"github.com/distribution/reference"
 	"github.com/docker/cli/cli/streams"
 	"github.com/docker/docker/api/types/image"
->>>>>>> ad34a49d77aec212e365ff11438dca915bd6c9ae
 	dockerregistry "github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/loft-sh/devspace/pkg/devspace/build/builder/helper"
