@@ -37,6 +37,7 @@
     ]
   },
   "resolutions": {
-    "axios": "^0.30.2"
+    "axios": "^0.30.2",
+    "@babel/traverse": "^7.23.2"
   }
 }
