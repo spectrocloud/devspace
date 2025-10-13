@@ -141,5 +141,10 @@
       "react-app"
     ]
   },
-  "proxy": "http://localhost:8090"
+  "proxy": "http://localhost:8090",
+  "overrides": {
+    "form-data": ">=2.5.4",
+    "jsonpath-plus": ">=10.3.0",
+    "@babel/traverse": ">=7.23.2"
+  }
 }
