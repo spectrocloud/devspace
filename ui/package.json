@@ -11,7 +11,7 @@
     "autoprefixer": "7.1.6",
     "babel-jest": "^25.5.1",
     "babel-loader": "^8.4.1",
-    "babel-preset-react-app": "^3.1.2",
+    "babel-preset-react-app": "^10.1.0",
     "case-sensitive-paths-webpack-plugin": "2.2.0",
     "chalk": "2.0.0",
     "css-loader": "^3.6.0",
@@ -80,7 +80,7 @@
     "@types/react-dom": "^16.9.25",
     "@types/react-router": "^4.4.5",
     "@types/react-router-dom": "^5.3.3",
-    "babel-preset-env": "^1.7.0",
+    "@babel/preset-env": "^7.28.3",
     "cross-env": "^6.0.3",
     "ignore-loader": "^0.1.2",
     "nodemon": "^1.19.4",
@@ -144,7 +144,6 @@
   "proxy": "http://localhost:8090",
   "overrides": {
     "form-data": ">=2.5.4",
-    "jsonpath-plus": ">=10.3.0",
-    "@babel/traverse": ">=7.23.2"
+    "jsonpath-plus": ">=10.3.0"
   }
 }
